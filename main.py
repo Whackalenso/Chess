@@ -152,6 +152,11 @@ class ChessVersion:
         promoPos = (7-promoPos[0], 7-promoPos[1])
       self.promotionPawn = promoPos
 
+    self.enPassant = _game.enPassant
+    if self.enPassant != None:
+      if _game.sides[0].moveDirection != 1:
+        self.enPassant = (7-self.enPassant[0], 7-self.enPassant[1])
+
 class Chess(Game):
   def __init__(self):
     super().__init__(WIN_SIZE, windowTitle="Chess")
@@ -170,6 +175,7 @@ class Chess(Game):
     self.flippingBoard = False
     self.sides = [Side(c, self) for c in [Color.WHITE, Color.BLACK]]
     self.currentSide = self.sides[0]
+    self.enPassant = None
     self._gameOver = False
     self._promotionPawn = None
 
@@ -206,6 +212,11 @@ class Chess(Game):
         promoPawn = (7-promoPawn[0], 7-promoPawn[1])
       promoPawn = self.squares[promoPawn]
     self.promotionPawn = promoPawn
+
+    self.enPassant = version.enPassant
+    if self.enPassant != None:
+      if self.sides[0].moveDirection != 1:
+        self.enPassant = (7-self.enPassant[0], 7-self.enPassant[1])
 
     self.updateColor()
 
@@ -359,6 +370,9 @@ class Piece(GameObject):
 
       self.moved = True
 
+      if pos != self.game.enPassant:
+        self.game.enPassant = None
+
       self.onMoveTo(pos)
 
 class Rook(Piece):
@@ -434,6 +448,9 @@ class Pawn(Piece):
     def _canMoveTo(self, pos, relPos, **kwargs):
       dir = self.side.moveDirection
       square = self.game.squares.get(pos)
+      if pos == self.game.enPassant:
+        square = True
+
       if square == None:
         if self.boardPosition[1] == [None, 6, 1][dir]:
           return (relPos == (0, -1 * dir)) or (relPos == (0, -2 * dir))
@@ -445,7 +462,15 @@ class Pawn(Piece):
     def name(self):
       return "Pawn"
 
+    def move(self, pos):
+      self._oldPos = self.boardPosition
+
+      super().move(pos)
+
     def onMoveTo(self, pos):
+      if abs(pos[1]-self._oldPos[1]) == 2:
+        self.game.enPassant = (pos[0], (pos[1]+self._oldPos[1])/2)
+
       if pos[1] == [None, 0, 7][self.side.moveDirection]:
         game.promotionPawn = self
 
