@@ -2,6 +2,7 @@ import os
 from abc import abstractmethod
 from enum import IntEnum
 import math
+import json
 
 from pygame_tool import *
 from clock import Clock
@@ -165,6 +166,9 @@ class Chess(Game):
     self.init()
 
   def init(self):
+    with open("settings.json", 'r') as f:
+      self.settings = json.loads(f.read())
+
     self._gameObjects.clear()
 
     background = GameObject(pygame.image.load(os.path.join('Assets', 'Chess Board v3.png')), size=BOARD_SIZE, position=BOARD_OFFSET)
@@ -584,6 +588,9 @@ def postMove():
     game.gameOver = True
 
   game.updateHistory()
+
+  if game.settings['autoFlip']:
+    flipBoard()
 
 @game.event(pygame.MOUSEBUTTONDOWN)
 def onMouseDown(data):

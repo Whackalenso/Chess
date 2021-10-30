@@ -5,7 +5,10 @@ class Clock:
     def __init__(self, game, win_size, historyButtons):
         self._lastTicks = pygame.time.get_ticks()
 
-        self.time = [1800 for _ in range(2)]
+        if game.settings['clockTime'] > 0:
+            self.time = [game.settings['clockTime'] for _ in range(2)]
+        else:
+            self.time = [1800 for _ in range(2)]
         self.boxes = [None, None]
         self.text = [GameObject(pygame.Surface(size=(0, 0))) for _ in range(2)]
 
