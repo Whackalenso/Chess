@@ -326,7 +326,8 @@ class Game:
         self.windowTitle = options.get('windowTitle')
         self.gravityScale = options.get('gravityScale', .3)
 
-        self._updateCallback = None
+        self._updateCallbacks = []
+        # I should do lists for other callbacks too
         self._touchCallback = None
         self._collideCallback = None
         self._keyEventCallback = None
@@ -377,7 +378,7 @@ class Game:
         pygame.quit()
 
     def update(self, callback):
-        self._updateCallback = callback
+        self._updateCallbacks.append(callback)
 
     def event(self, eventType):
         def _event(callback):
@@ -416,8 +417,8 @@ class Game:
             b.remove(self)
 
     def _update(self):
-        if self._updateCallback != None: 
-            self._updateCallback()
+        for c in self._updateCallbacks:
+            c()
 
         self.win.fill(self.backgroundColor)
 

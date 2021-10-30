@@ -4,6 +4,7 @@ from enum import IntEnum
 import math
 
 from pygame_tool import *
+from clock import Clock
 import pygame
 
 WIN_SIZE = (700, 750)
@@ -66,8 +67,8 @@ def colorToRgb(color, opposite=False):
 
   return {Color.WHITE: (248, 188, 58), Color.BLACK: (140, 91, 62)}[color] #(255, 215, 36) (113, 82, 0)
 
-def centerBotText(botText):
-  botText.position = (WIN_SIZE[0]/2 - botText.size[0]/2, (BOARD_SIZE[1]+BOARD_OFFSET[1]+WIN_SIZE[1])/2 - botText.surface.get_height()/2)
+def centerBotText(botText, offset=(0, 0)):
+  botText.position = (WIN_SIZE[0]/2 - botText.size[0]/2 + offset[0], (BOARD_SIZE[1]+BOARD_OFFSET[1]+WIN_SIZE[1])/2 - botText.surface.get_height()/2 + offset[1])
 
 #endregion
 
@@ -181,6 +182,8 @@ class Chess(Game):
 
     self.updateColor()
 
+    self.clock = Clock(self, WIN_SIZE, [undoButton, redoButton])
+
     super().addButtons(self._buttons)
 
     self.history = [self.version()] # list of HistoryObject
@@ -272,24 +275,26 @@ class Chess(Game):
     self._promotionPawn = value
     
   #if theres every problems it might be cuz the text only gets changed locally in the function
-  def _botText(self, text, textObj, oldBool, newBool):
+  def _botText(self, text, textObj, oldBool, newBool, offset=(0, 0), ignoreCapPieces=False):
     if newBool and not oldBool:
       text.text = text.text.format(["Black", "White"][int(self.currentSide.color)])
       text.color = colorToRgb(otherSide().color)
       textObj = GameObject(text.render())
-      centerBotText(textObj)
+      centerBotText(textObj, offset=offset)
       self.addGameObject(textObj)
 
-      for s in self.sides:
-        for p in s.capturedPieces.values():
-          self.removeGameObject(p)
+      if not ignoreCapPieces:
+        for s in self.sides:
+          for p in s.capturedPieces.values():
+            self.removeGameObject(p)
 
     if not newBool and oldBool:
       self.removeGameObject(textObj)
 
-      for s in self.sides:
-        for p in s.capturedPieces.values():
-          self.addGameObject(p)
+      if not ignoreCapPieces:
+        for s in self.sides:
+          for p in s.capturedPieces.values():
+            self.addGameObject(p)
 
     return textObj
 
@@ -526,6 +531,24 @@ promotionText = Text(
 )
 promotionTextObj = None
 
+def restartGame():
+  if undoButton.inGame:
+    undoButton.remove(game)
+  if redoButton.inGame:
+    redoButton.remove(game)
+  game.clock.remove()
+  game.init()
+
+def undo():
+  game.historyIndex += 1
+
+def redo():
+  game.historyIndex -= 1
+
+restartButton = Button((80, 40), (WIN_SIZE[0]-80, 0), Text("Restart", 'Assets/Fonts/Montserrat/Montserrat-Regular.ttf', 14, (0, 0, 0), True).render(), (255, 255, 255), (255, 0, 0), (175, 0, 0), restartGame)
+undoButton = Button((40, 40), (0, 0), pygame.transform.scale(pygame.image.load('Assets/Undo Arrow.png'), (25, 25)), (255, 255, 255), (210, 210, 210), (150, 150, 150), undo)
+redoButton = Button((40, 40), (40, 0), pygame.transform.flip(pygame.transform.scale(pygame.image.load('Assets/Undo Arrow.png'), (25, 25)), True, False), (255, 255, 255), (210, 210, 210), (150, 150, 150), redo)
+
 #endregion
 
 game = Chess()
@@ -650,26 +673,10 @@ def capture(piece):
   side.capturedPieces[type(piece)] = capPieceGameObject # might not type()
   side._capturedPiecesPositions[capPieceGameObject.position] = capPieceGameObject
 
-def restartGame():
-  if undoButton.inGame:
-    undoButton.remove(game)
-  if redoButton.inGame:
-    redoButton.remove(game)
-  game.init()
-
-def undo():
-  game.historyIndex += 1
-
-def redo():
-  game.historyIndex -= 1
-
 #endregion
 
 #region Buttons
 
-restartButton = Button((80, 40), (WIN_SIZE[0]-80, 0), Text("Restart", 'Assets/Fonts/Montserrat/Montserrat-Regular.ttf', 14, (0, 0, 0), True).render(), (255, 255, 255), (255, 0, 0), (175, 0, 0), restartGame)
-undoButton = Button((40, 40), (0, 0), pygame.transform.scale(pygame.image.load('Assets/Undo Arrow.png'), (25, 25)), (255, 255, 255), (210, 210, 210), (150, 150, 150), undo)
-redoButton = Button((40, 40), (40, 0), pygame.transform.flip(pygame.transform.scale(pygame.image.load('Assets/Undo Arrow.png'), (25, 25)), True, False), (255, 255, 255), (210, 210, 210), (150, 150, 150), redo)
 game.addButtons([restartButton])
 
 #endregion
