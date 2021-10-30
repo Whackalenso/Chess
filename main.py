@@ -8,13 +8,14 @@ from pygame_tool import *
 from clock import Clock
 import pygame
 
-WIN_SIZE = (700, 750)
+WIN_SIZE = (800, 800)
 
 BOARD_SIZE = (600, 600)
-BOARD_OFFSET = (50, 50)
+BOARD_OFFSET = (100, 100)
 
 CAPTURED_PIECE_PADDING = 5
-CAPTURED_PIECE_ROW_SPACING = 8
+CAPTURED_PIECE_ROW_SPACING = 6
+CAPTURED_PIECE_ROWS_OFFSET = -5
 
 #region Util
 
@@ -47,7 +48,7 @@ def boardToPixelPos(position):
     return (position[0]/8 * BOARD_SIZE[0] + BOARD_OFFSET[0], position[1]/8 * BOARD_SIZE[1] + BOARD_OFFSET[1])
 
 def capturedPieceRows():
-  rowsMidpoint = (BOARD_SIZE[1] + WIN_SIZE[1] + BOARD_OFFSET[1])/2
+  rowsMidpoint = (BOARD_SIZE[1] + WIN_SIZE[1] + BOARD_OFFSET[1])/2 + CAPTURED_PIECE_ROWS_OFFSET
   return [rowsMidpoint-(CAPTURED_PIECE_ROW_SPACING/2)-capturedPieceSquareSize(), rowsMidpoint+(CAPTURED_PIECE_ROW_SPACING/2)]
 
 def capturedPieceSquareSize():
